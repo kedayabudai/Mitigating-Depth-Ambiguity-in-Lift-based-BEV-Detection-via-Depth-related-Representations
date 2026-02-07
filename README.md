@@ -19,6 +19,7 @@ You can then create a symbolic link `data` to the `/dataset` directory in the do
 ### Model
 
 download:https://pan.baidu.com/s/1HQnuKoCoPeYDSkT4kW9c4w?pwd=c67t
+according to md4all_main README file, download md4allDDa_nuscenes.ckpt and put it into checkpoints
 
 #### nuScenes
 
