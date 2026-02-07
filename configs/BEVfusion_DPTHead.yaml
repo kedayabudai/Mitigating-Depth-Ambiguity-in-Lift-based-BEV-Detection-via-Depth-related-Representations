@@ -1,0 +1,259 @@
+seed: 0
+deterministic: False
+checkpoint_config:
+  interval: 1
+  max_keep_ckpts: 12
+log_config:
+  interval: 100
+  hooks: [{'type': 'TextLoggerHook'}, {'type': 'TensorboardLoggerHook'}]
+load_from: null
+resume_from:
+cudnn_benchmark: False
+fp16:
+  loss_scale:
+    growth_interval: 2000
+max_epochs: 30
+runner:
+  type: CustomEpochBasedRunner
+  max_epochs: 30
+#find_unused_parameters: True
+dataset_type: NuScenesDataset
+dataset_root: /gz-data/nuscenes/
+gt_paste_stop_epoch: 15
+reduce_beams: 32
+load_dim: 5
+use_dim: 5
+load_augmented: null
+point_cloud_range: [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]
+voxel_size: [0.1, 0.1, 0.2]
+image_size: [256, 704]
+augment2d:
+  resize: [[0.38, 0.55], [0.48, 0.48]]
+  rotate: [-5.4, 5.4]
+  gridmask:
+    prob: 0.0
+    fixed_prob: True
+augment3d:
+  scale: [0.95, 1.05]
+  rotate: [-0.3925, 0.3925]
+  translate: 0
+object_classes: ['car', 'truck', 'construction_vehicle', 'bus', 'trailer', 'barrier', 'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone']
+map_classes: ['drivable_area', 'ped_crossing', 'walkway', 'stop_line', 'carpark_area', 'divider']
+input_modality:
+  use_lidar: True
+  use_camera: True
+  use_radar: False
+  use_map: False
+  use_external: False
+train_pipeline: [{'type': 'LoadMultiViewImageFromFiles', 'to_float32': True}, {'type': 'LoadPointsFromFile', 'coord_type': 'LIDAR', 'load_dim': 5, 'use_dim': 5, 'reduce_beams': 32, 'load_augmented': null}, {'type': 'LoadPointsFromMultiSweeps', 'sweeps_num': 9, 'load_dim': 5, 'use_dim': 5, 'reduce_beams': 32, 'pad_empty_sweeps': True, 'remove_close': True, 'load_augmented': null}, {'type': 'LoadRadarPointsMultiSweeps', 'load_dim': 18, 'sweeps_num': 6, 'use_dim': [0, 1, 2, 5, 8, 9, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56], 'max_num': 2500, 'compensate_velocity': True, 'filtering': 'none', 'normalize': False}, {'type': 'LoadAnnotations3D', 'with_bbox_3d': True, 'with_label_3d': True, 'with_attr_label': False}, {'type': 'ObjectPaste', 'stop_epoch': 15, 'db_sampler': {'dataset_root': '/gz-data/nuscenes/', 'info_path': '/gz-data/nuscenes/nuscenes_dbinfos_train.pkl', 'rate': 1.0, 'prepare': {'filter_by_difficulty': [-1], 'filter_by_min_points': {'car': 5, 'truck': 5, 'bus': 5, 'trailer': 5, 'construction_vehicle': 5, 'traffic_cone': 5, 'barrier': 5, 'motorcycle': 5, 'bicycle': 5, 'pedestrian': 5}}, 'classes': ['car', 'truck', 'construction_vehicle', 'bus', 'trailer', 'barrier', 'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone'], 'sample_groups': {'car': 2, 'truck': 3, 'construction_vehicle': 7, 'bus': 4, 'trailer': 6, 'barrier': 2, 'motorcycle': 6, 'bicycle': 6, 'pedestrian': 2, 'traffic_cone': 2}, 'points_loader': {'type': 'LoadPointsFromFile', 'coord_type': 'LIDAR', 'load_dim': 5, 'use_dim': 5, 'reduce_beams': 32}}}, {'type': 'ImageAug3D', 'final_dim': [256, 704], 'resize_lim': [0.38, 0.55], 'bot_pct_lim': [0.0, 0.0], 'rot_lim': [-5.4, 5.4], 'rand_flip': True, 'is_train': True}, {'type': 'GlobalRotScaleTrans', 'resize_lim': [0.95, 1.05], 'rot_lim': [-0.3925, 0.3925], 'trans_lim': 0, 'is_train': True}, {'type': 'RandomFlip3D'}, {'type': 'PointsRangeFilter', 'point_cloud_range': [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]}, {'type': 'ObjectRangeFilter', 'point_cloud_range': [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]}, {'type': 'ObjectNameFilter', 'classes': ['car', 'truck', 'construction_vehicle', 'bus', 'trailer', 'barrier', 'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone']}, {'type': 'ImageNormalize', 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225]}, {'type': 'GridMask', 'use_h': True, 'use_w': True, 'max_epoch': 20, 'rotate': 1, 'offset': False, 'ratio': 0.5, 'mode': 1, 'prob': 0.0, 'fixed_prob': True}, {'type': 'PointShuffle'}, {'type': 'DefaultFormatBundle3D', 'classes': ['car', 'truck', 'construction_vehicle', 'bus', 'trailer', 'barrier', 'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone']}, {'type': 'Collect3D', 'keys': ['img', 'points', 'radar', 'gt_bboxes_3d', 'gt_labels_3d'], 'meta_keys': ['camera_intrinsics', 'camera2ego', 'lidar2ego', 'lidar2camera', 'lidar2image', 'camera2lidar', 'img_aug_matrix', 'lidar_aug_matrix']}, {'type': 'GTDepth', 'keyframe_only': True}]
+test_pipeline: [{'type': 'LoadMultiViewImageFromFiles', 'to_float32': True}, {'type': 'LoadPointsFromFile', 'coord_type': 'LIDAR', 'load_dim': 5, 'use_dim': 5, 'reduce_beams': 32, 'load_augmented': null}, {'type': 'LoadPointsFromMultiSweeps', 'sweeps_num': 9, 'load_dim': 5, 'use_dim': 5, 'reduce_beams': 32, 'pad_empty_sweeps': True, 'remove_close': True, 'load_augmented': null}, {'type': 'LoadRadarPointsMultiSweeps', 'load_dim': 18, 'sweeps_num': 6, 'use_dim': [0, 1, 2, 5, 8, 9, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56], 'max_num': 2500, 'compensate_velocity': True, 'filtering': 'none', 'normalize': False}, {'type': 'LoadAnnotations3D', 'with_bbox_3d': True, 'with_label_3d': True, 'with_attr_label': False}, {'type': 'ImageAug3D', 'final_dim': [256, 704], 'resize_lim': [0.48, 0.48], 'bot_pct_lim': [0.0, 0.0], 'rot_lim': [0.0, 0.0], 'rand_flip': False, 'is_train': False}, {'type': 'GlobalRotScaleTrans', 'resize_lim': [1.0, 1.0], 'rot_lim': [0.0, 0.0], 'trans_lim': 0.0, 'is_train': False}, {'type': 'PointsRangeFilter', 'point_cloud_range': [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]}, {'type': 'ImageNormalize', 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225]}, {'type': 'DefaultFormatBundle3D', 'classes': ['car', 'truck', 'construction_vehicle', 'bus', 'trailer', 'barrier', 'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone']}, {'type': 'Collect3D', 'keys': ['img', 'points', 'radar', 'gt_bboxes_3d', 'gt_labels_3d'], 'meta_keys': ['camera_intrinsics', 'camera2ego', 'lidar2ego', 'lidar2camera', 'lidar2image', 'camera2lidar', 'img_aug_matrix', 'lidar_aug_matrix']}, {'type': 'GTDepth', 'keyframe_only': True}]
+data:
+  samples_per_gpu: 3
+  workers_per_gpu: 3
+  train:
+    type: CBGSDataset
+    dataset:
+      type: NuScenesDataset
+      dataset_root: /gz-data/nuscenes/
+      ann_file: /gz-data/nuscenes/nuscenes_infos_train.pkl
+      pipeline: [{'type': 'LoadMultiViewImageFromFiles', 'to_float32': True}, {'type': 'LoadPointsFromFile', 'coord_type': 'LIDAR', 'load_dim': 5, 'use_dim': 5, 'reduce_beams': 32, 'load_augmented': null}, {'type': 'LoadPointsFromMultiSweeps', 'sweeps_num': 9, 'load_dim': 5, 'use_dim': 5, 'reduce_beams': 32, 'pad_empty_sweeps': True, 'remove_close': True, 'load_augmented': null}, {'type': 'LoadRadarPointsMultiSweeps', 'load_dim': 18, 'sweeps_num': 6, 'use_dim': [0, 1, 2, 5, 8, 9, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56], 'max_num': 2500, 'compensate_velocity': True, 'filtering': 'none', 'normalize': False}, {'type': 'LoadAnnotations3D', 'with_bbox_3d': True, 'with_label_3d': True, 'with_attr_label': False}, {'type': 'ObjectPaste', 'stop_epoch': 15, 'db_sampler': {'dataset_root': '/gz-data/nuscenes/', 'info_path': '/gz-data/nuscenes/nuscenes_dbinfos_train.pkl', 'rate': 1.0, 'prepare': {'filter_by_difficulty': [-1], 'filter_by_min_points': {'car': 5, 'truck': 5, 'bus': 5, 'trailer': 5, 'construction_vehicle': 5, 'traffic_cone': 5, 'barrier': 5, 'motorcycle': 5, 'bicycle': 5, 'pedestrian': 5}}, 'classes': ['car', 'truck', 'construction_vehicle', 'bus', 'trailer', 'barrier', 'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone'], 'sample_groups': {'car': 2, 'truck': 3, 'construction_vehicle': 7, 'bus': 4, 'trailer': 6, 'barrier': 2, 'motorcycle': 6, 'bicycle': 6, 'pedestrian': 2, 'traffic_cone': 2}, 'points_loader': {'type': 'LoadPointsFromFile', 'coord_type': 'LIDAR', 'load_dim': 5, 'use_dim': 5, 'reduce_beams': 32}}}, {'type': 'ImageAug3D', 'final_dim': [256, 704], 'resize_lim': [0.38, 0.55], 'bot_pct_lim': [0.0, 0.0], 'rot_lim': [-5.4, 5.4], 'rand_flip': True, 'is_train': True}, {'type': 'GlobalRotScaleTrans', 'resize_lim': [0.95, 1.05], 'rot_lim': [-0.3925, 0.3925], 'trans_lim': 0, 'is_train': True}, {'type': 'RandomFlip3D'}, {'type': 'PointsRangeFilter', 'point_cloud_range': [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]}, {'type': 'ObjectRangeFilter', 'point_cloud_range': [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]}, {'type': 'ObjectNameFilter', 'classes': ['car', 'truck', 'construction_vehicle', 'bus', 'trailer', 'barrier', 'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone']}, {'type': 'ImageNormalize', 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225]}, {'type': 'GridMask', 'use_h': True, 'use_w': True, 'max_epoch': 20, 'rotate': 1, 'offset': False, 'ratio': 0.5, 'mode': 1, 'prob': 0.0, 'fixed_prob': True}, {'type': 'PointShuffle'}, {'type': 'DefaultFormatBundle3D', 'classes': ['car', 'truck', 'construction_vehicle', 'bus', 'trailer', 'barrier', 'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone']}, {'type': 'Collect3D', 'keys': ['img', 'points', 'radar', 'gt_bboxes_3d', 'gt_labels_3d'], 'meta_keys': ['camera_intrinsics', 'camera2ego', 'lidar2ego', 'lidar2camera', 'lidar2image', 'camera2lidar', 'img_aug_matrix', 'lidar_aug_matrix']}, {'type': 'GTDepth', 'keyframe_only': True}]
+      object_classes: ['car', 'truck', 'construction_vehicle', 'bus', 'trailer', 'barrier', 'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone']
+      map_classes: ['drivable_area', 'ped_crossing', 'walkway', 'stop_line', 'carpark_area', 'divider']
+      modality:
+        use_lidar: True
+        use_camera: True
+        use_radar: False
+        use_map: False
+        use_external: False
+      test_mode: False
+      use_valid_flag: True
+      box_type_3d: LiDAR
+  val:
+    type: NuScenesDataset
+    dataset_root: /gz-data/nuscenes/
+    ann_file: /gz-data/nuscenes/nuscenes_infos_val.pkl
+    pipeline: [{'type': 'LoadMultiViewImageFromFiles', 'to_float32': True}, {'type': 'LoadPointsFromFile', 'coord_type': 'LIDAR', 'load_dim': 5, 'use_dim': 5, 'reduce_beams': 32, 'load_augmented': null}, {'type': 'LoadPointsFromMultiSweeps', 'sweeps_num': 9, 'load_dim': 5, 'use_dim': 5, 'reduce_beams': 32, 'pad_empty_sweeps': True, 'remove_close': True, 'load_augmented': null}, {'type': 'LoadRadarPointsMultiSweeps', 'load_dim': 18, 'sweeps_num': 6, 'use_dim': [0, 1, 2, 5, 8, 9, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56], 'max_num': 2500, 'compensate_velocity': True, 'filtering': 'none', 'normalize': False}, {'type': 'LoadAnnotations3D', 'with_bbox_3d': True, 'with_label_3d': True, 'with_attr_label': False}, {'type': 'ImageAug3D', 'final_dim': [256, 704], 'resize_lim': [0.48, 0.48], 'bot_pct_lim': [0.0, 0.0], 'rot_lim': [0.0, 0.0], 'rand_flip': False, 'is_train': False}, {'type': 'GlobalRotScaleTrans', 'resize_lim': [1.0, 1.0], 'rot_lim': [0.0, 0.0], 'trans_lim': 0.0, 'is_train': False}, {'type': 'PointsRangeFilter', 'point_cloud_range': [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]}, {'type': 'ImageNormalize', 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225]}, {'type': 'DefaultFormatBundle3D', 'classes': ['car', 'truck', 'construction_vehicle', 'bus', 'trailer', 'barrier', 'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone']}, {'type': 'Collect3D', 'keys': ['img', 'points', 'radar', 'gt_bboxes_3d', 'gt_labels_3d'], 'meta_keys': ['camera_intrinsics', 'camera2ego', 'lidar2ego', 'lidar2camera', 'lidar2image', 'camera2lidar', 'img_aug_matrix', 'lidar_aug_matrix']}, {'type': 'GTDepth', 'keyframe_only': True}]
+    object_classes: ['car', 'truck', 'construction_vehicle', 'bus', 'trailer', 'barrier', 'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone']
+    map_classes: ['drivable_area', 'ped_crossing', 'walkway', 'stop_line', 'carpark_area', 'divider']
+    modality:
+      use_lidar: True
+      use_camera: True
+      use_radar: False
+      use_map: False
+      use_external: False
+    test_mode: False
+    box_type_3d: LiDAR
+  test:
+    type: NuScenesDataset
+    dataset_root: /gz-data/nuscenes/
+    ann_file: /gz-data/nuscenes/nuscenes_infos_val.pkl
+    pipeline: [{'type': 'LoadMultiViewImageFromFiles', 'to_float32': True}, {'type': 'LoadPointsFromFile', 'coord_type': 'LIDAR', 'load_dim': 5, 'use_dim': 5, 'reduce_beams': 32, 'load_augmented': null}, {'type': 'LoadPointsFromMultiSweeps', 'sweeps_num': 9, 'load_dim': 5, 'use_dim': 5, 'reduce_beams': 32, 'pad_empty_sweeps': True, 'remove_close': True, 'load_augmented': null}, {'type': 'LoadRadarPointsMultiSweeps', 'load_dim': 18, 'sweeps_num': 6, 'use_dim': [0, 1, 2, 5, 8, 9, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56], 'max_num': 2500, 'compensate_velocity': True, 'filtering': 'none', 'normalize': False}, {'type': 'LoadAnnotations3D', 'with_bbox_3d': True, 'with_label_3d': True, 'with_attr_label': False}, {'type': 'ImageAug3D', 'final_dim': [256, 704], 'resize_lim': [0.48, 0.48], 'bot_pct_lim': [0.0, 0.0], 'rot_lim': [0.0, 0.0], 'rand_flip': False, 'is_train': False}, {'type': 'GlobalRotScaleTrans', 'resize_lim': [1.0, 1.0], 'rot_lim': [0.0, 0.0], 'trans_lim': 0.0, 'is_train': False}, {'type': 'PointsRangeFilter', 'point_cloud_range': [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]}, {'type': 'ImageNormalize', 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225]}, {'type': 'DefaultFormatBundle3D', 'classes': ['car', 'truck', 'construction_vehicle', 'bus', 'trailer', 'barrier', 'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone']}, {'type': 'Collect3D', 'keys': ['img', 'points', 'radar', 'gt_bboxes_3d', 'gt_labels_3d'], 'meta_keys': ['camera_intrinsics', 'camera2ego', 'lidar2ego', 'lidar2camera', 'lidar2image', 'camera2lidar', 'img_aug_matrix', 'lidar_aug_matrix']}, {'type': 'GTDepth', 'keyframe_only': True}]
+    object_classes: ['car', 'truck', 'construction_vehicle', 'bus', 'trailer', 'barrier', 'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone']
+    map_classes: ['drivable_area', 'ped_crossing', 'walkway', 'stop_line', 'carpark_area', 'divider']
+    modality:
+      use_lidar: True
+      use_camera: True
+      use_radar: False
+      use_map: False
+      use_external: False
+    test_mode: True
+    box_type_3d: LiDAR
+evaluation:
+  interval: 1
+  pipeline: [{'type': 'LoadMultiViewImageFromFiles', 'to_float32': True}, {'type': 'LoadPointsFromFile', 'coord_type': 'LIDAR', 'load_dim': 5, 'use_dim': 5, 'reduce_beams': 32, 'load_augmented': null}, {'type': 'LoadPointsFromMultiSweeps', 'sweeps_num': 9, 'load_dim': 5, 'use_dim': 5, 'reduce_beams': 32, 'pad_empty_sweeps': True, 'remove_close': True, 'load_augmented': null}, {'type': 'LoadRadarPointsMultiSweeps', 'load_dim': 18, 'sweeps_num': 6, 'use_dim': [0, 1, 2, 5, 8, 9, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56], 'max_num': 2500, 'compensate_velocity': True, 'filtering': 'none', 'normalize': False}, {'type': 'LoadAnnotations3D', 'with_bbox_3d': True, 'with_label_3d': True, 'with_attr_label': False}, {'type': 'ImageAug3D', 'final_dim': [256, 704], 'resize_lim': [0.48, 0.48], 'bot_pct_lim': [0.0, 0.0], 'rot_lim': [0.0, 0.0], 'rand_flip': False, 'is_train': False}, {'type': 'GlobalRotScaleTrans', 'resize_lim': [1.0, 1.0], 'rot_lim': [0.0, 0.0], 'trans_lim': 0.0, 'is_train': False}, {'type': 'PointsRangeFilter', 'point_cloud_range': [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]}, {'type': 'ImageNormalize', 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225]}, {'type': 'DefaultFormatBundle3D', 'classes': ['car', 'truck', 'construction_vehicle', 'bus', 'trailer', 'barrier', 'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone']}, {'type': 'Collect3D', 'keys': ['img', 'points', 'radar', 'gt_bboxes_3d', 'gt_labels_3d'], 'meta_keys': ['camera_intrinsics', 'camera2ego', 'lidar2ego', 'lidar2camera', 'lidar2image', 'camera2lidar', 'img_aug_matrix', 'lidar_aug_matrix']}, {'type': 'GTDepth', 'keyframe_only': True}]
+radar_sweeps: 6
+radar_max_points: 2500
+radar_use_dims: [0, 1, 2, 5, 8, 9, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56]
+radar_compensate_velocity: True
+radar_filtering: none
+radar_voxel_size: [0.8, 0.8, 8]
+radar_jitter: 0
+radar_normalize: False
+model:
+  type: BEVFusion
+  encoders:
+    lidar: null
+    camera:
+      vtransform:
+        type: LSSTransform
+        image_size: [256, 704]
+        xbound: [-51.2, 51.2, 0.4]
+        ybound: [-51.2, 51.2, 0.4]
+        zbound: [-10.0, 10.0, 20.0]
+        dbound: [1.0, 60.0, 0.5]
+        in_channels: 256
+        out_channels: 80
+        feature_size: [32, 88]
+        downsample: 2
+      backbone:
+        type: SwinTransformer
+        embed_dims: 96
+        depths: [2, 2, 6, 2]
+        num_heads: [3, 6, 12, 24]
+        window_size: 7
+        mlp_ratio: 4
+        qkv_bias: True
+        qk_scale: null
+        drop_rate: 0.0
+        attn_drop_rate: 0.0
+        drop_path_rate: 0.2
+        patch_norm: True
+        out_indices: [1, 2, 3]
+        with_cp: False
+        convert_weights: True
+        init_cfg:
+          type: Pretrained
+          checkpoint: pretrained/swint-nuimages-pretrained.pth
+      neck:
+        type: GeneralizedLSSFPN
+        in_channels: [192, 384, 768]
+        out_channels: 256
+        start_level: 0
+        num_outs: 3
+        norm_cfg:
+          type: BN2d
+          requires_grad: True
+        act_cfg:
+          type: ReLU
+          inplace: True
+        upsample_cfg:
+          mode: bilinear
+          align_corners: False
+      DPThead: True
+  fuser: null
+  heads:
+    map: null
+    object:
+      type: CenterHead
+      in_channels: 256
+      train_cfg:
+        point_cloud_range: [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]
+        grid_size: [1024, 1024, 1]
+        voxel_size: [0.1, 0.1, 0.2]
+        out_size_factor: 8
+        dense_reg: 1
+        gaussian_overlap: 0.1
+        max_objs: 500
+        min_radius: 2
+        code_weights: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.2, 0.2]
+      test_cfg:
+        post_center_limit_range: [-61.2, -61.2, -10.0, 61.2, 61.2, 10.0]
+        max_per_img: 500
+        max_pool_nms: False
+        min_radius: [4, 12, 10, 1, 0.85, 0.175]
+        score_threshold: 0.1
+        out_size_factor: 8
+        voxel_size: [0.1, 0.1]
+        nms_type: ['circle', 'rotate', 'rotate', 'circle', 'rotate', 'rotate']
+        pre_max_size: 1000
+        post_max_size: 83
+        nms_thr: 0.2
+        nms_scale: [[1.0], [1.0, 1.0], [1.0, 1.0], [1.0], [1.0, 1.0], [2.5, 4.0]]
+      tasks: [['car'], ['truck', 'construction_vehicle'], ['bus', 'trailer'], ['barrier'], ['motorcycle', 'bicycle'], ['pedestrian', 'traffic_cone']]
+      common_heads:
+        reg: [2, 2]
+        height: [1, 2]
+        dim: [3, 2]
+        rot: [2, 2]
+        vel: [2, 2]
+      share_conv_channel: 64
+      bbox_coder:
+        type: CenterPointBBoxCoder
+        pc_range: [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]
+        post_center_range: [-61.2, -61.2, -10.0, 61.2, 61.2, 10.0]
+        max_num: 500
+        score_threshold: 0.1
+        out_size_factor: 8
+        voxel_size: [0.1, 0.1]
+        code_size: 9
+      separate_head:
+        type: SeparateHead
+        init_bias: -2.19
+        final_kernel: 3
+      loss_cls:
+        type: GaussianFocalLoss
+        reduction: mean
+      loss_bbox:
+        type: L1Loss
+        reduction: mean
+        loss_weight: 0.25
+      norm_bbox: True
+  decoder:
+    backbone:
+      type: GeneralizedResNet
+      in_channels: 80
+      blocks: [[2, 128, 2], [2, 256, 2], [2, 512, 1]]
+    neck:
+      type: LSSFPN
+      in_indices: [-1, 0]
+      in_channels: [512, 128]
+      out_channels: 256
+      scale_factor: 2
+optimizer:
+  type: AdamW
+  lr: 0.0002
+  weight_decay: 0.01
+  paramwise_cfg:
+    custom_keys:
+      absolute_pos_embed:
+        decay_mult: 0
+      relative_position_bias_table:
+        decay_mult: 0
+      encoders.camera.backbone:
+        lr_mult: 0.1
+optimizer_config:
+  grad_clip:
+    max_norm: 35
+    norm_type: 2
+lr_config:
+  policy: cyclic
+  warmup: linear
+  warmup_iters: 500
+  warmup_ratio: 0.33333333
+  target_ratio: 5.0
+  cyclic_times: 1
+  step_ratio_up: 0.4
+momentum_config:
+  policy: cyclic
+  cyclic_times: 1
+  step_ratio_up: 0.4
