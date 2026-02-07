@@ -1,0 +1,28 @@
+EXPERIMENT_NAME: 'test-simple-md4allDDa-nuscenes'
+
+LOAD:
+  CHECKPOINT_PATH: '/opt/dv2-mit-bev/md4all-main/checkpoints/md4allDDa_nuscenes.ckpt'
+
+DATASET:
+  NAME: 'nuscenes'
+  VERSION: 'mini'  # 使用mini版本
+  DATAROOT: '/opt/dv2-mit-bev/data/nuscenes'  # 确保路径正确
+  AUGMENTATION:
+    NORMALIZE:
+      MODE: 'Image' # Use Image mode if daytime is not known a priori
+  
+MODEL:
+  DEPTH:
+    MAX_DEPTH: 60.0  # 修改最大深度为60米
+
+EVALUATION:
+  DEPTH:
+    MAX_DEPTH: 60.0  # 同时修改评估时的最大深度
+
+LOSS:
+  PHOTOMETRIC:
+    WEIGHT: 0.0
+  SMOOTHNESS_WEIGHT: 0.0
+  VELOCITY_WEIGHT: 0.0
+  SUPERVISED:
+    WEIGHT: 1.0

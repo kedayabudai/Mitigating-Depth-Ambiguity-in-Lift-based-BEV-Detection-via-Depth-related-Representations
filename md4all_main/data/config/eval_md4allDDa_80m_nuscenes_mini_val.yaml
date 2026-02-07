@@ -1,0 +1,38 @@
+EXPERIMENT_NAME: 'eval-md4allDDa-80m-nuscenes-mini-val'
+
+SYSTEM:
+  BENCHMARK: False
+
+LOAD:
+  CHECKPOINT_PATH: '/opt/dv2-mit-bev/md4all-main/checkpoints/md4allDDa_nuscenes.ckpt'
+
+DATASET:
+  NAME: 'nuscenes'
+  VERSION: 'mini'  # 使用mini版本
+  DATAROOT: '/opt/dv2-mit-bev/data/nuscenes'  # 确保路径正确
+  DROP_STATIC: True
+  LOAD:
+    GT:
+      DEPTH: True
+      POSE: True
+  AUGMENTATION:
+    NORMALIZE:
+      MODE: 'Daytime'
+
+EVALUATION:
+  BATCH_SIZE: 2
+  SAVE:
+    QUANTITATIVE_RES_PATH: '/opt/dv2-mit-bev/md4all-main/results/quantitative/nuscenes/mini_val'
+    #QUALITATIVE_RES_PATH: '/opt/dv2-mit-bev/md4all-main/results/qualitative/nuscenes/mini_val/md4allDDa'
+    RGB: False
+    DEPTH:
+      GT: False
+    #USE_VALIDATION_SET: True
+
+LOSS:
+  PHOTOMETRIC:
+    WEIGHT: 0.0
+  SMOOTHNESS_WEIGHT: 0.0
+  VELOCITY_WEIGHT: 0.0
+  SUPERVISED:
+    WEIGHT: 1.0
